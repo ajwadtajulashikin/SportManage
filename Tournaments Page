@@ -1,0 +1,358 @@
+import { useState } from 'react';
+import Sidebar from './Sidebar';
+import { Plus, Users, Trophy, Calendar, X, Eye } from 'lucide-react';
+import { Tournament, Player } from '../App';
+
+interface TournamentsPageProps {
+  currentPage: 'dashboard' | 'players' | 'tournaments' | 'reports';
+  onNavigate: (page: 'dashboard' | 'players' | 'tournaments' | 'reports') => void;
+  onLogout: () => void;
+  tournaments: Tournament[];
+  players: Player[];
+  onAddTournament: (tournament: Omit<Tournament, 'id'>) => void;
+  onUpdateTournament: (id: string, tournament: Partial<Tournament>) => void;
+  onDeleteTournament: (id: string) => void;
+}
+
+export default function TournamentsPage({
+  currentPage,
+  onNavigate,
+  onLogout,
+  tournaments,
+  players,
+  onAddTournament,
+  onUpdateTournament,
+}: TournamentsPageProps) {
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showResultsModal, setShowResultsModal] = useState(false);
+  const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    startDate: '',
+    endDate: '',
+    participants: '',
+  });
+
+  const handleOpenCreateModal = () => {
+    setFormData({ name: '', startDate: '', endDate: '', participants: '' });
+    setShowCreateModal(true);
+  };
+
+  const handleCloseCreateModal = () => {
+    setShowCreateModal(false);
+    setFormData({ name: '', startDate: '', endDate: '', participants: '' });
+  };
+
+  const handleSubmitCreate = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newTournament = {
+      name: formData.name,
+      startDate: formData.startDate,
+      endDate: formData.endDate,
+      status: 'upcoming' as const,
+      participants: parseInt(formData.participants),
+    };
+    onAddTournament(newTournament);
+    handleCloseCreateModal();
+  };
+
+  const handleOpenAssignModal = (tournament: Tournament) => {
+    setSelectedTournament(tournament);
+    setShowAssignModal(true);
+  };
+
+  const handleOpenResultsModal = (tournament: Tournament) => {
+    setSelectedTournament(tournament);
+    setShowResultsModal(true);
+  };
+
+  const getStatusColor = (status: Tournament['status']) => {
+    switch (status) {
+      case 'upcoming':
+        return 'bg-blue-100 text-blue-700';
+      case 'ongoing':
+        return 'bg-green-100 text-green-700';
+      case 'completed':
+        return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  return (
+    <>
+      <Sidebar currentPage={currentPage} onNavigate={onNavigate} onLogout={onLogout} />
+      
+      <div className="flex-1 overflow-auto">
+        <div className="p-8">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-gray-900 mb-2">Tournaments</h1>
+              <p className="text-gray-600">Manage all tournaments and competitions</p>
+            </div>
+            <button
+              onClick={handleOpenCreateModal}
+              className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              <Plus className="w-5 h-5" />
+              Create Tournament
+            </button>
+          </div>
+
+          {/* Tournament List */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {tournaments.map((tournament) => (
+              <div key={tournament.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="bg-indigo-100 p-3 rounded-lg">
+                    <Trophy className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(tournament.status)}`}>
+                    {tournament.status.charAt(0).toUpperCase() + tournament.status.slice(1)}
+                  </span>
+                </div>
+                
+                <h3 className="text-gray-900 mb-3">{tournament.name}</h3>
+                
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center gap-2 text-gray-600 text-sm">
+                    <Calendar className="w-4 h-4" />
+                    <span>{tournament.startDate} - {tournament.endDate}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600 text-sm">
+                    <Users className="w-4 h-4" />
+                    <span>{tournament.participants} participants</span>
+                  </div>
+                  {tournament.winner && (
+                    <div className="flex items-center gap-2 text-green-600 text-sm">
+                      <Trophy className="w-4 h-4" />
+                      <span>Winner: {tournament.winner}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleOpenAssignModal(tournament)}
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors text-sm"
+                  >
+                    <Users className="w-4 h-4" />
+                    Assign Players
+                  </button>
+                  <button
+                    onClick={() => handleOpenResultsModal(tournament)}
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm"
+                  >
+                    <Eye className="w-4 h-4" />
+                    View Results
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Create Tournament Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-gray-900">Create New Tournament</h2>
+              <button
+                onClick={handleCloseCreateModal}
+                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+            <form onSubmit={handleSubmitCreate} className="p-6 space-y-4">
+              <div>
+                <label htmlFor="tournamentName" className="block text-gray-700 mb-2">
+                  Tournament Name
+                </label>
+                <input
+                  id="tournamentName"
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="startDate" className="block text-gray-700 mb-2">
+                  Start Date
+                </label>
+                <input
+                  id="startDate"
+                  type="date"
+                  value={formData.startDate}
+                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="endDate" className="block text-gray-700 mb-2">
+                  End Date
+                </label>
+                <input
+                  id="endDate"
+                  type="date"
+                  value={formData.endDate}
+                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="participants" className="block text-gray-700 mb-2">
+                  Number of Participants
+                </label>
+                <input
+                  id="participants"
+                  type="number"
+                  value={formData.participants}
+                  onChange={(e) => setFormData({ ...formData, participants: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  required
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={handleCloseCreateModal}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  Create Tournament
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Players Modal */}
+      {showAssignModal && selectedTournament && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg w-full max-w-2xl">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-gray-900">Assign Players to {selectedTournament.name}</h2>
+              <button
+                onClick={() => setShowAssignModal(false)}
+                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {players.map((player) => (
+                  <label
+                    key={player.id}
+                    className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <div className="flex-1">
+                      <p className="text-gray-900">{player.name}</p>
+                      <p className="text-gray-600 text-sm">{player.position} • {player.team}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              <div className="flex gap-3 pt-6">
+                <button
+                  onClick={() => setShowAssignModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => setShowAssignModal(false)}
+                  className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  Assign Selected Players
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Results Modal */}
+      {showResultsModal && selectedTournament && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg w-full max-w-2xl">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-gray-900">{selectedTournament.name} - Results</h2>
+              <button
+                onClick={() => setShowResultsModal(false)}
+                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+            <div className="p-6">
+              {selectedTournament.status === 'completed' ? (
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200 rounded-lg p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Trophy className="w-8 h-8 text-yellow-600" />
+                      <h3 className="text-gray-900">Tournament Winner</h3>
+                    </div>
+                    <p className="text-gray-900 text-2xl">{selectedTournament.winner}</p>
+                  </div>
+                  
+                  <div className="border border-gray-200 rounded-lg">
+                    <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
+                      <h4 className="text-gray-900">Final Standings</h4>
+                    </div>
+                    <div className="divide-y divide-gray-200">
+                      <div className="px-6 py-3 flex justify-between">
+                        <span className="text-gray-900">1st Place: {selectedTournament.winner}</span>
+                        <span className="text-gray-600">100 pts</span>
+                      </div>
+                      <div className="px-6 py-3 flex justify-between">
+                        <span className="text-gray-600">2nd Place: Team B</span>
+                        <span className="text-gray-600">85 pts</span>
+                      </div>
+                      <div className="px-6 py-3 flex justify-between">
+                        <span className="text-gray-600">3rd Place: Team C</span>
+                        <span className="text-gray-600">72 pts</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-600">
+                    {selectedTournament.status === 'ongoing'
+                      ? 'Tournament is still in progress. Results will be available once completed.'
+                      : 'Tournament has not started yet.'}
+                  </p>
+                </div>
+              )}
+              <button
+                onClick={() => setShowResultsModal(false)}
+                className="w-full mt-6 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
