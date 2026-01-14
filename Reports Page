@@ -1,0 +1,167 @@
+import Sidebar from './Sidebar';
+import { FileText, Download, TrendingUp, Users, Trophy } from 'lucide-react';
+import { Player, Tournament } from '../App';
+
+interface ReportsPageProps {
+  currentPage: 'dashboard' | 'players' | 'tournaments' | 'reports';
+  onNavigate: (page: 'dashboard' | 'players' | 'tournaments' | 'reports') => void;
+  onLogout: () => void;
+  players: Player[];
+  tournaments: Tournament[];
+}
+
+export default function ReportsPage({
+  currentPage,
+  onNavigate,
+  onLogout,
+  players,
+  tournaments,
+}: ReportsPageProps) {
+  const completedTournaments = tournaments.filter(t => t.status === 'completed').length;
+  const totalParticipants = tournaments.reduce((sum, t) => sum + t.participants, 0);
+
+  const reports = [
+    {
+      id: 1,
+      title: 'Player Performance Report',
+      description: 'Comprehensive analysis of all player statistics',
+      icon: Users,
+      color: 'blue',
+    },
+    {
+      id: 2,
+      title: 'Tournament Summary',
+      description: 'Overview of all tournaments and their outcomes',
+      icon: Trophy,
+      color: 'purple',
+    },
+    {
+      id: 3,
+      title: 'Analytics Report',
+      description: 'Detailed metrics and performance indicators',
+      icon: TrendingUp,
+      color: 'green',
+    },
+  ];
+
+  return (
+    <>
+      <Sidebar currentPage={currentPage} onNavigate={onNavigate} onLogout={onLogout} />
+      
+      <div className="flex-1 overflow-auto">
+        <div className="p-8">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-gray-900 mb-2">Reports</h1>
+            <p className="text-gray-600">Generate and download comprehensive reports</p>
+          </div>
+
+          {/* Summary Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-600 mb-1">Total Players</p>
+                  <h2 className="text-gray-900">{players.length}</h2>
+                </div>
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <Users className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-600 mb-1">Completed Tournaments</p>
+                  <h2 className="text-gray-900">{completedTournaments}</h2>
+                </div>
+                <div className="bg-green-100 p-3 rounded-lg">
+                  <Trophy className="w-6 h-6 text-green-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-600 mb-1">Total Participants</p>
+                  <h2 className="text-gray-900">{totalParticipants}</h2>
+                </div>
+                <div className="bg-purple-100 p-3 rounded-lg">
+                  <TrendingUp className="w-6 h-6 text-purple-600" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Available Reports */}
+          <div className="mb-8">
+            <h3 className="text-gray-900 mb-4">Available Reports</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {reports.map((report) => {
+                const Icon = report.icon;
+                const colorClasses = {
+                  blue: 'bg-blue-100 text-blue-600',
+                  purple: 'bg-purple-100 text-purple-600',
+                  green: 'bg-green-100 text-green-600',
+                };
+                return (
+                  <div key={report.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className={`${colorClasses[report.color as keyof typeof colorClasses]} p-3 rounded-lg inline-block mb-4`}>
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <h4 className="text-gray-900 mb-2">{report.title}</h4>
+                    <p className="text-gray-600 text-sm mb-4">{report.description}</p>
+                    <button className="flex items-center gap-2 w-full justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                      <Download className="w-4 h-4" />
+                      Download
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-gray-900">Recent Activity</h3>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="bg-blue-100 p-2 rounded-lg">
+                    <FileText className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-gray-900">Player Performance Report Generated</p>
+                    <p className="text-gray-600 text-sm">2 hours ago</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="bg-purple-100 p-2 rounded-lg">
+                    <FileText className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-gray-900">Tournament Summary Downloaded</p>
+                    <p className="text-gray-600 text-sm">1 day ago</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="bg-green-100 p-2 rounded-lg">
+                    <FileText className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-gray-900">Analytics Report Generated</p>
+                    <p className="text-gray-600 text-sm">3 days ago</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
