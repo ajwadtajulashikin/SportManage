@@ -1,0 +1,130 @@
+import Sidebar from './Sidebar';
+import { Users, Trophy, TrendingUp, Calendar } from 'lucide-react';
+import { Player, Tournament } from '../App';
+
+interface DashboardPageProps {
+  currentPage: 'dashboard' | 'players' | 'tournaments' | 'reports';
+  onNavigate: (page: 'dashboard' | 'players' | 'tournaments' | 'reports') => void;
+  onLogout: () => void;
+  players: Player[];
+  tournaments: Tournament[];
+}
+
+export default function DashboardPage({
+  currentPage,
+  onNavigate,
+  onLogout,
+  players,
+  tournaments,
+}: DashboardPageProps) {
+  const upcomingTournaments = tournaments.filter(t => t.status === 'upcoming');
+  const ongoingTournaments = tournaments.filter(t => t.status === 'ongoing');
+
+  return (
+    <>
+      <Sidebar currentPage={currentPage} onNavigate={onNavigate} onLogout={onLogout} />
+      
+      <div className="flex-1 overflow-auto">
+        <div className="p-8">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-gray-900 mb-2">Dashboard</h1>
+            <p className="text-gray-600">Welcome to Sports Management System</p>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <Users className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
+              <p className="text-gray-600 mb-1">Total Players</p>
+              <h2 className="text-gray-900">{players.length}</h2>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="bg-purple-100 p-3 rounded-lg">
+                  <Trophy className="w-6 h-6 text-purple-600" />
+                </div>
+              </div>
+              <p className="text-gray-600 mb-1">Total Tournaments</p>
+              <h2 className="text-gray-900">{tournaments.length}</h2>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="bg-green-100 p-3 rounded-lg">
+                  <TrendingUp className="w-6 h-6 text-green-600" />
+                </div>
+              </div>
+              <p className="text-gray-600 mb-1">Ongoing</p>
+              <h2 className="text-gray-900">{ongoingTournaments.length}</h2>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="bg-orange-100 p-3 rounded-lg">
+                  <Calendar className="w-6 h-6 text-orange-600" />
+                </div>
+              </div>
+              <p className="text-gray-600 mb-1">Upcoming</p>
+              <h2 className="text-gray-900">{upcomingTournaments.length}</h2>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Recent Players */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="p-6 border-b border-gray-200">
+                <h3 className="text-gray-900">Recent Players</h3>
+              </div>
+              <div className="p-6">
+                <div className="space-y-4">
+                  {players.slice(0, 5).map((player) => (
+                    <div key={player.id} className="flex items-center justify-between">
+                      <div>
+                        <p className="text-gray-900">{player.name}</p>
+                        <p className="text-gray-600 text-sm">{player.position} • {player.team}</p>
+                      </div>
+                      <span className="text-gray-600 text-sm">{player.age} yrs</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Upcoming Tournaments */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="p-6 border-b border-gray-200">
+                <h3 className="text-gray-900">Upcoming Tournaments</h3>
+              </div>
+              <div className="p-6">
+                <div className="space-y-4">
+                  {upcomingTournaments.length > 0 ? (
+                    upcomingTournaments.map((tournament) => (
+                      <div key={tournament.id} className="flex items-start gap-3">
+                        <div className="bg-indigo-100 p-2 rounded-lg">
+                          <Trophy className="w-5 h-5 text-indigo-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-gray-900">{tournament.name}</p>
+                          <p className="text-gray-600 text-sm">{tournament.startDate}</p>
+                        </div>
+                        <span className="text-gray-600 text-sm">{tournament.participants} teams</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-600 text-center py-4">No upcoming tournaments</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
